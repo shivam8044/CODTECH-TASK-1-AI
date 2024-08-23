@@ -5,9 +5,9 @@ DOMAIN: Artificial Intelligence
 DURATION : August To September2024 
 MENTOR :SRAVANI GOUNI
 
-#Overview of Data Processing in a Project
-Data processing in a project involves a series of steps to collect, clean, transform, and analyze data to derive meaningful insights and support decision-making. Here's a general overview of the process:
+#Overview of Data Processing in a Project:-
 
+Data processing in a project involves a series of steps to collect, clean, transform, and analyze data to derive meaningful insights and support decision-making. Here's a general overview of the process:
 1. Data Collection
 Purpose: Gather raw data from various sources.
 Methods:
