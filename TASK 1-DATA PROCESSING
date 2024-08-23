@@ -1,0 +1,178 @@
+# CODTECH-TASK-1-AI
+#DATA PROCESSING
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.impute import SimpleImputer
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+
+# Example dataset
+data = {
+    'age': [25, 30, np.nan, 35, 40, 50],
+    'salary': [50000, 60000, np.nan, 80000, 120000, 150000],
+    'gender': ['Male', 'Female', 'Female', 'Male', np.nan, 'Female'],
+    'purchased': [0, 1, 0, 1, 0, 1]
+}
+df = pd.DataFrame(data)
+
+# Step 1: Handling Missing Values
+# For numerical columns, we'll use the mean to fill missing values.
+# For categorical columns, we'll use the most frequent value.
+numeric_features = ['age', 'salary']
+categorical_features = ['gender']
+
+numeric_transformer = SimpleImputer(strategy='mean')
+categorical_transformer = SimpleImputer(strategy='most_frequent')
+
+# Step 2: Encoding Categorical Variables
+# OneHotEncoder is used to convert categorical data into numerical format.
+categorical_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='most_frequent')),
+    ('onehot', OneHotEncoder(handle_unknown='ignore'))
+])
+
+# Step 3: Normalizing/Standardizing Numerical Data
+numeric_transformer = Pipeline(steps=[
+    ('imputer', SimpleImputer(strategy='mean')),
+    ('scaler', StandardScaler())
+])
+
+# Combine both transformations using ColumnTransformer
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('num', numeric_transformer, numeric_features),
+        ('cat', categorical_transformer, categorical_features)
+    ])
+
+# Apply transformations to the data
+X = df.drop('purchased', axis=1)  # Features
+y = df['purchased']  # Target variable
+
+X_preprocessed = preprocessor.fit_transform(X)
+
+# Convert preprocessed data back to a DataFrame for better readability
+# Get feature names after transformation
+cat_columns = preprocessor.named_transformers_['cat']['onehot'].get_feature_names_out(categorical_features)
+num_columns = numeric_features
+
+# Combine numerical and categorical features
+processed_columns = np.hstack((num_columns, cat_columns))
+X_preprocessed_df = pd.DataFrame(X_preprocessed, columns=processed_columns)
+
+print("Preprocessed Data:\n", X_preprocessed_df)
+
+# Step 4: Splitting the Data into Training and Testing Sets
+X_train, X_test, y_train, y_test = train_test_split(X_preprocessed_df, y, test_size=0.2, random_state=42)
+
+print("\nTraining Features:\n", X_train)
+print("\nTesting Features:\n", X_test)
+print("\nTraining Labels:\n", y_train)
+print("\nTesting Labels:\n", y_test)
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Original Data
+fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+fig.suptitle('Original Data Distribution')
+
+# Age Distribution
+sns.histplot(df['age'], bins=5, kde=True, ax=axes[0])
+axes[0].set_title('Age Distribution')
+
+# Salary Distribution
+sns.histplot(df['salary'], bins=5, kde=True, ax=axes[1])
+axes[1].set_title('Salary Distribution')
+
+# Gender Distribution
+sns.countplot(x='gender', data=df, ax=axes[2])
+axes[2].set_title('Gender Distribution')
+
+plt.tight_layout()
+plt.show()
+
+# Preprocessed Data
+fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+fig.suptitle('Preprocessed Data Distribution')
+
+# Age Distribution (after scaling)
+sns.histplot(X_preprocessed_df['age'], bins=5, kde=True, ax=axes[0])
+axes[0].set_title('Age Distribution (Scaled)')
+
+# Salary Distribution (after scaling)
+sns.histplot(X_preprocessed_df['salary'], bins=5, kde=True, ax=axes[1])
+axes[1].set_title('Salary Distribution (Scaled)')
+
+# Gender Distribution (after encoding)
+encoded_gender_cols = [col for col in X_preprocessed_df.columns if 'gender_' in col]
+sns.barplot(x=encoded_gender_cols, y=X_preprocessed_df[encoded_gender_cols].sum(), ax=axes[2])
+axes[2].set_title('Gender Distribution (Encoded)')
+
+plt.tight_layout()
+plt.show()
+# Scatter plot of Age vs Salary, colored by Purchased
+plt.figure(figsize=(10, 6))
+sns.scatterplot(x=X_preprocessed_df['age'], y=X_preprocessed_df['salary'], hue=y, palette='viridis', s=100)
+plt.title('Scatter Plot of Age vs Salary (Colored by Purchased)')
+plt.xlabel('Age (Scaled)')
+plt.ylabel('Salary (Scaled)')
+plt.show()
+# Original Data - Histogram
+plt.figure(figsize=(12, 6))
+
+# Histogram for Age
+plt.subplot(1, 2, 1)
+sns.histplot(df['age'], bins=5, kde=True, color='skyblue')
+plt.title('Original Age Distribution')
+plt.xlabel('Age')
+plt.ylabel('Frequency')
+
+# Histogram for Salary
+plt.subplot(1, 2, 2)
+sns.histplot(df['salary'], bins=5, kde=True, color='lightgreen')
+plt.title('Original Salary Distribution')
+plt.xlabel('Salary')
+plt.ylabel('Frequency')
+
+plt.tight_layout()
+plt.show()
+
+# Preprocessed Data - Histogram
+plt.figure(figsize=(12, 6))
+
+# Histogram for Age (Scaled)
+plt.subplot(1, 2, 1)
+sns.histplot(X_preprocessed_df['age'], bins=5, kde=True, color='skyblue')
+plt.title('Scaled Age Distribution')
+plt.xlabel('Age (Scaled)')
+plt.ylabel('Frequency')
+
+# Histogram for Salary (Scaled)
+plt.subplot(1, 2, 2)
+sns.histplot(X_preprocessed_df['salary'], bins=5, kde=True, color='lightgreen')
+plt.title('Scaled Salary Distribution')
+plt.xlabel('Salary (Scaled)')
+plt.ylabel('Frequency')
+
+plt.tight_layout()
+plt.show()
+# Original Data - Bar Plot for Gender
+plt.figure(figsize=(8, 6))
+sns.countplot(x='gender', data=df, palette='pastel')
+plt.title('Original Gender Distribution')
+plt.xlabel('Gender')
+plt.ylabel('Count')
+plt.show()
+
+# Preprocessed Data - Bar Plot for Encoded Gender
+plt.figure(figsize=(8, 6))
+
+# Select encoded gender columns
+encoded_gender_cols = [col for col in X_preprocessed_df.columns if 'gender_' in col]
+sns.barplot(x=encoded_gender_cols, y=X_preprocessed_df[encoded_gender_cols].sum(), palette='pastel')
+plt.title('Encoded Gender Distribution')
+plt.xlabel('Gender')
+
+plt.ylabel('Count')
+plt.show()
